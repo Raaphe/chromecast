@@ -40,11 +40,8 @@ document.getElementById('forward-10').addEventListener('click', () => {
 
 document.getElementById('pause-play').addEventListener('click', () => {
     
-    if (isConnected) {
-        loadMedia(videoList[currentVideoIndex]);
-    
-    } 
     if (media) {
+        loadMedia(videoList[currentVideoIndex]);
 
         if (isPlaying) {
             media.pause(null, onMediaCommandSuccess, onError);
@@ -228,20 +225,4 @@ function initializeMuted(remotePlayerController, remotePlayer, mediaSession) {
             currentMediaSession.setVolume(volumeRequest, onMediaCommandSuccess, onError);
         }
     });
-}
-export default function startPlaybackWithURL(videoUrl) {
-    if (!session) {
-        initializeApiOnly();
-
-        document.addEventListener('sessionInitialized', function() {
-            videoList = [videoUrl];
-            currentVideoIndex = 0; // Reset the index to load the new video
-
-            loadMedia(videoList[currentVideoIndex]);
-        }, { once: true });
-    } else {
-        videoList = [videoUrl];
-        currentVideoIndex = 0;
-        loadMedia(videoList[currentVideoIndex]);
-    }
 }

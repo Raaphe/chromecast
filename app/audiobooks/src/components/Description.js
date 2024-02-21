@@ -32,8 +32,8 @@ const Description = () => {
           />
         </svg>
       </button>
-      <br/>
-      <br/>
+      <br />
+      <br />
       <div className="row text-center">
         <h1>{book?.title}</h1>
       </div>
@@ -147,7 +147,7 @@ const Description = () => {
           </div>
           <br />
           <div className="row">
-            <button type="button" className="btn btn-primary btn-small">
+            <button type="button" className="btn btn-primary btn-small" onClick={() => navigate("/cast", { state: { bookId: book.id }})}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chromecast Sender</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.0.0/shaka-player.compiled.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./sender.css" />
+    <style>
+      /* For WebKit browsers like Chrome and Safari */
+      .form-range::-webkit-slider-thumb {
+        background: rgb(48, 48, 48);
+        /* Replace 'gray' with the exact shade of dark gray if needed */
+      }
+
+      .input {
+        margin-bottom: 10px;
+      }
+
+      /* For Mozilla Firefox */
+      .form-range::-moz-range-thumb {
+        background: rgb(48, 48, 48);
+        /* Replace 'gray' with the exact shade of dark gray if needed */
+      }
+
+      /* For Microsoft Edge */
+      .form-range::-ms-thumb {
+        background: rgb(48, 48, 48);
+        /* Replace 'gray' with the exact shade of dark gray if needed */
+      }
+
+      /* Add your CSS styling here */
+      body {
+        background: #000;
+      }
+
+      .app-container {
+        height: 100vh;
+        color: white;
+        padding: 16px;
+        background: #111;
+        /* Simulate a dark theme */
+      }
+
+      .icon {
+        background: #333;
+        border-radius: 50%;
+        padding: 20px;
+      }
+
+      .icon img {
+        display: block;
+        margin: auto;
+      }
+
+      .top-bar,
+      .bottom-bar {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .screen {
+        height: 70%;
+        /* Adjust based on actual screen size */
+        background: #222;
+        margin-bottom: 16px;
+        position: relative;
+      }
+
+      .btn-circle.btn-xl {
+        width: 70px;
+        height: 70px;
+        border-radius: 60px;
+        font-size: 15px;
+        text-align: center;
+        margin-top: -10px;
+      }
+
+      .btn-circle.btn-md {
+        width: 55px;
+        height: 55px;
+        border-radius: 60px;
+        font-size: 15px;
+        text-align: center;
+        margin: -1px;
+      }
+
+      .screen:after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      /* Adjustments for mobile view */
+      @media (max-width: 576px) {
+        .app-container {
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container-fluid app-container">
+      <div class="row top-bar">
+        <button type="button" class="btn btn-dark" id="connectButton">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            fill="currentColor"
+            class="bi bi-cast animated-svg"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="m7.646 9.354-3.792 3.792a.5.5 0 0 0 .353.854h7.586a.5.5 0 0 0 .354-.854L8.354 9.354a.5.5 0 0 0-.708 0"
+            />
+            <path
+              d="M11.414 11H14.5a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.5-.5h-13a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h3.086l-1 1H1.5A1.5 1.5 0 0 1 0 10.5v-7A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v7a1.5 1.5 0 0 1-1.5 1.5h-2.086z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="screen" id="startBtn">
+        <!-- Screen content goes here -->
+      </div>
+
+      <div class="row bottom-bar">
+        <!-- Slider -->
+        <div class="col-12 p-2 input">
+          <input
+            type="range"
+            id="seekSlider"
+            min="0"
+            max="100"
+            step="1"
+            value="0"
+            style="width: 80%"
+            class="form-range w-100"
+          />
+          <span id="currentTime">0:00</span> / <span id="totalTime">0:00</span>
+        </div>
+      </div>
+
+      <div class="row bottom-bar">
+        <button
+          type="button"
+          class="btn btn-secondary btn-circle btn-md col-2"
+          id="back-btn"
+        >
+          <a href="http://localhost:3000/">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-arrow-bar-left"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12.5 15a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5M10 8a.5.5 0 0 1-.5.5H3.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L3.707 7.5H9.5a.5.5 0 0 1 .5.5"
+              />
+            </svg>
+          </a>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-circle btn-md col-2"
+          id="back-10"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            class="bi bi-rewind-circle"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M7.729 5.055a.5.5 0 0 0-.52.038l-3.5 2.5a.5.5 0 0 0 0 .814l3.5 2.5A.5.5 0 0 0 8 10.5V8.614l3.21 2.293A.5.5 0 0 0 12 10.5v-5a.5.5 0 0 0-.79-.407L8 7.386V5.5a.5.5 0 0 0-.271-.445"
+            />
+            <path
+              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-circle btn-xl col-2"
+          id="playBtn"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            class="bi bi-play-circle-fill"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814z"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-circle btn-md col-2"
+          id="forward-10"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            class="bi bi-fast-forward-circle"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
+            />
+            <path
+              d="M4.271 5.055a.5.5 0 0 1 .52.038L8 7.386V5.5a.5.5 0 0 1 .79-.407l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 8 10.5V8.614l-3.21 2.293A.5.5 0 0 1 4 10.5v-5a.5.5 0 0 1 .271-.445"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger btn-circle btn-md col-2"
+          id="muteToggle"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            class="bi bi-volume-mute"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06M6 5.04 4.312 6.39A.5.5 0 0 1 4 6.5H2v3h2a.5.5 0 0 1 .312.11L6 10.96zm7.854.606a.5.5 0 0 1 0 .708L12.207 8l1.647 1.646a.5.5 0 0 1-.708.708L11.5 8.707l-1.646 1.647a.5.5 0 0 1-.708-.708L10.793 8 9.146 6.354a.5.5 0 1 1 .708-.708L11.5 7.293l1.646-1.647a.5.5 0 0 1 .708 0"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <script src="CastVideos.js" type="module"></script>
+      <script
+        type="text/javascript"
+        src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"
+      ></script>
+    </div>
+
+    <script>
+      let currentSession;
+      let currentMediaSession;
+      let isPlaying = true;
+      let currentVideoIndex = 0;
+      let currentVideoUrl;
+      let updateInterval;
+      let lastVolumeLevel = 1;
+      const applicationId = "3DDC41A0";
+      const seekSlider = document.getElementById("seekSlider");
+      const muteToggle = document.getElementById("muteToggle");
+      const currentTimeElement = document.getElementById("currentTime");
+      const totalTimeElement = document.getElementById("totalTime");
+      const defaultContentType = "video/mp4";
+      const videoList = [
+        "https://transfertco.ca/video/DBillPrelude.mp4",
+        "https://transfertco.ca/video/DBillSpotted.mp4",
+        "https://transfertco.ca/video/usa23_7_02.mp4",
+      ];
+
+      document.getElementById("connectButton").addEventListener("click", () => {
+        initializeApiOnly();
+      });
+
+      document.getElementById("startBtn").addEventListener("click", () => {
+        if (currentSession) {
+          if (localStorage.getItem("currentVideoIndexLS")) {
+            loadMedia(videoList[localStorage.getItem("currentVideoIndexLS")]);
+          } else {
+            loadMedia(videoList[currentVideoIndex]);
+          }
+        } else {
+          alert("Connectez-vous sur chromecast en premier");
+        }
+      });
+
+      document.getElementById("back-10").addEventListener("click", () => {
+        if (session) {
+          seekBackward();
+        } else {
+          alert("Connectez-vous sur chromecast en premier");
+        }
+      });
+
+      document.getElementById("forward-10").addEventListener("click", () => {
+        if (session) {
+          seekForward();
+        } else {
+          alert("Connectez-vous sur chromecast en premier");
+        }
+      });
+
+      document.getElementById("playBtn").addEventListener("click", () => {
+        if (currentMediaSession) {
+          if (isPlaying) {
+            currentMediaSession.pause(null, onMediaCommandSuccess, onError);
+          } else {
+            currentMediaSession.play(null, onMediaCommandSuccess, onError);
+          }
+          isPlaying = !isPlaying;
+        }
+      });
+
+      function sessionListener(newSession) {
+        currentSession = newSession;
+        document.getElementById("startBtn").style.display = "block";
+      }
+
+      function initializeMuted(
+        remotePlayerController,
+        remotePlayer,
+        mediaSession
+      ) {
+        //Ajout listener + boutton
+        muteToggle.addEventListener("click", () => {
+          if (currentMediaSession.volume.muted) {
+            // Unmute
+            const volume = new chrome.cast.Volume(lastVolumeLevel, false);
+            const volumeRequest = new chrome.cast.media.VolumeRequest(volume);
+            currentMediaSession.setVolume(
+              volumeRequest,
+              onMediaCommandSuccess,
+              onError
+            );
+          } else {
+            lastVolumeLevel = currentMediaSession.volume.level;
+            // Mute
+            const volume = new chrome.cast.Volume(0, true);
+            const volumeRequest = new chrome.cast.media.VolumeRequest(volume);
+            currentMediaSession.setVolume(
+              volumeRequest,
+              onMediaCommandSuccess,
+              onError
+            );
+          }
+        });
+      }
+
+      function initializeSeekSlider(remotePlayerController, mediaSession) {
+        currentMediaSession = mediaSession;
+        document.getElementById("playBtn").style.display = "block";
+        // Set max value of seek slider to media duration in seconds
+        seekSlider.max = mediaSession.media.duration;
+
+        // Update seek slider and time elements on time update
+        updateInterval = setInterval(() => {
+          const currentTime = mediaSession.getEstimatedTime();
+          const totalTime = mediaSession.media.duration;
+
+          seekSlider.value = currentTime;
+          currentTimeElement.textContent = formatTime(currentTime);
+          totalTimeElement.textContent = formatTime(totalTime);
+        }, 1000); //chaque 1000 ms... 1 sec
+
+        // slider change
+        seekSlider.addEventListener("input", () => {
+          const seekTime = parseFloat(seekSlider.value);
+          remotePlayerController.seek(seekTime);
+        });
+      }
+
+      /**
+       * Seeks the current media session forward by 10 seconds.
+       */
+      function seekForward() {
+        const castSession =
+          cast.framework.CastContext.getInstance().getCurrentSession();
+        if (castSession) {
+          const media = castSession.getMediaSession();
+          if (media && media.currentTime !== null) {
+            let newPosition = media.currentTime + 10; // Add 10 seconds
+            // Ensure the new position does not exceed the media duration
+            newPosition = Math.min(newPosition, media.media.duration);
+            seekToPosition(newPosition);
+          }
+        }
+      }
+
+      /**
+       * Seeks the current media session backward by 10 seconds.
+       */
+      function seekBackward() {
+        
+        var SeekRequest = new chrome.cast.media.SeekRequest();
+        SeekRequest.currentTime = -10;
+        var mediaController = castPlayer.mediaController; // Assuming you have a reference to the MediaController
+        mediaController.seek(seekRequest, function() {
+          // Handle the response
+        }, function(errorCode) {
+          // Handle the error
+        });
+        // Assuming `player` is your video player object
+        player.currentTime = seekRequest.currentTime;
+
+      }
+
+      /**
+       * Seeks to a specified position in the current media session.
+       * @param {number} newPosition The new position to seek to, in seconds.
+       */
+      function seekToPosition(newPosition) {
+        const castSession =
+          cast.framework.CastContext.getInstance().getCurrentSession();
+        if (castSession && castSession.getMediaSession()) {
+          const media = castSession.getMediaSession();
+          const request = new chrome.cast.media.SeekRequest();
+          request.currentTime = newPosition;
+          media.seek(request, onSeekSuccess, onSeekError);
+        }
+      }
+
+      function onSeekSuccess() {
+        console.log("Seek operation successful");
+      }
+
+      function onSeekError() {
+        console.error("Error seeking media");
+      }
+
+      function receiverListener(availability) {
+        if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
+          document.getElementById("connectButton").style.display = "block";
+        } else {
+          document.getElementById("connectButton").style.display = "none";
+        }
+      }
+
+      function onInitSuccess() {
+        console.log("Chromecast init success");
+      }
+
+      function onError(error) {
+        console.error("Chromecast initialization error", error);
+      }
+
+      function onMediaCommandSuccess() {
+        console.log("Media command success");
+      }
+
+      function initializeApiOnly() {
+        const sessionRequest = new chrome.cast.SessionRequest(applicationId);
+        const apiConfig = new chrome.cast.ApiConfig(
+          sessionRequest,
+          sessionListener,
+          receiverListener
+        );
+
+        chrome.cast.initialize(apiConfig, onInitSuccess, onError);
+      }
+
+      function loadMedia(videoUrl) {
+        currentVideoUrl = videoUrl;
+        const mediaInfo = new chrome.cast.media.MediaInfo(
+          videoUrl,
+          defaultContentType
+        );
+        const request = new chrome.cast.media.LoadRequest(mediaInfo);
+        const remotePlayer = new cast.framework.RemotePlayer();
+        const remotePlayerController =
+          new cast.framework.RemotePlayerController(remotePlayer);
+
+        currentSession.loadMedia(
+          request,
+          (mediaSession) => {
+            console.log("Media chargé avec succès");
+            initializeSeekSlider(remotePlayerController, mediaSession);
+            initializeMuted(remotePlayerController, remotePlayer, mediaSession);
+          },
+          onError
+        );
+      }
+
+      function formatTime(timeInSeconds) {
+        const minutes = Math.floor(timeInSeconds / 60);
+        const seconds = Math.floor(timeInSeconds % 60);
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+          2,
+          "0"
+        )}`;
+      }
+    </script>
+  </body>
+</html>
