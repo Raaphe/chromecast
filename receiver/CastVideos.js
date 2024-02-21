@@ -4,7 +4,11 @@ let isPlaying = true;
 const seekSlider = document.getElementById('media-slider');
 const defaultContentType = 'video/mp4';
 let currentVideoIndex = 0;
+const muteToggle = document.getElementById('muteToggle');
+const currentTimeElement = document.getElementById('currentTime');
+const totalTimeElement = document.getElementById('totalTime');
 const applicationID = '3DDC41A0';
+var isConnected = false;
 const videoList = [
     'https://transfertco.ca/video/DBillPrelude.mp4',
     'https://transfertco.ca/video/DBillSpotted.mp4',
@@ -20,14 +24,6 @@ document.getElementById('cast-btn').addEventListener('click', () => {
     initializeApiOnly();
 });
 
-// TODO: start not made
-document.getElementById('startBtn').addEventListener('click', () => {
-    if (session) {
-        loadMedia(videoList[currentVideoIndex]);
-    } else {
-        alert('Connectez-vous sur chromecast en premier');
-    }
-});
 
 document.getElementById('back-10').addEventListener('click', () => {
     if (session) {
@@ -45,18 +41,15 @@ document.getElementById('forward-10').addEventListener('click', () => {
     }
 });
 
-document.getElementById('next').addEventListener('click', () => {
-    if (session) {
-        currentVideoIndex = (currentVideoIndex + 1) % videoList.length;
-        loadMedia(videoList[currentVideoIndex]);
-    } else {
-        alert('Connectez-vous sur chromecast en premier');
-    }
-});
-
 
 document.getElementById('pause-play').addEventListener('click', () => {
+    
+    if (isConnected) {
+        loadMedia(videoList[currentVideoIndex]);
+    
+    } 
     if (media) {
+
         if (isPlaying) {
             media.pause(null, onMediaCommandSuccess, onError);
         } else {
@@ -69,7 +62,7 @@ document.getElementById('pause-play').addEventListener('click', () => {
 //  TODO: 
 function sessionListener(newSession) {
     session = newSession;
-    document.getElementById('startBtn').style.display = 'block';
+    document.getElementById('cast-btn').style.display = 'block';
     document.getElementById('next').style.display = 'block';
 }
 
@@ -96,6 +89,7 @@ function onError(error) {
 
 function onMediaCommandSuccess() {
     console.log('Media command success');
+    isConnected = true;
 }
 
 function initializeApiOnly() {
@@ -107,10 +101,17 @@ function initializeApiOnly() {
 }
 
 function loadMedia(videoUrl) {
-    const mediaInfo = new chrome.cast.media.MediaInfo(videoUrl, 'video/mp4');
+    currentVideoUrl = videoUrl;
+    const mediaInfo = new chrome.cast.media.MediaInfo(videoUrl, defaultContentType);
     const request = new chrome.cast.media.LoadRequest(mediaInfo);
+    const remotePlayer = new cast.framework.RemotePlayer();
+    const remotePlayerController = new cast.framework.RemotePlayerController(remotePlayer);
 
-    session.loadMedia(request, onMediaDiscovered, onError);
+    currentSession.loadMedia(request, mediaSession => {
+        console.log('Media chargé avec succès');
+        initializeSeekSlider(remotePlayerController, mediaSession);
+        initializeMuted(remotePlayerController, remotePlayer, mediaSession);
+      }, onError);
 }
 
 function seek(isForward) {
@@ -125,7 +126,7 @@ function seek(isForward) {
 
 function initializeSeekSlider(remotePlayerController, mediaSession) {
     currentMediaSession = mediaSession;
-    document.getElementById('playBtn').style.display = 'block';
+    document.getElementById('pause-play').style.display = 'block';
    // Set max value of seek slider to media duration in seconds
    seekSlider.max = mediaSession.media.duration;
 
@@ -200,6 +201,33 @@ function initializeCastApi() {
                     console.error('Error connecting to Chromecast: ' + errorCode);
                 }
             );
+        }
+    });
+}
+
+
+function formatTime(timeInSeconds) {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function initializeMuted(remotePlayerController, remotePlayer, mediaSession) {
+    //Ajout listener + boutton
+    muteToggle.addEventListener('click', () => {
+        if (currentMediaSession.volume.muted) {
+            // Unmute
+            const volume = new chrome.cast.Volume(lastVolumeLevel, false);
+            const volumeRequest = new chrome.cast.media.VolumeRequest(volume);
+            currentMediaSession.setVolume(volumeRequest, onMediaCommandSuccess, onError);
+        } else {
+            
+            
+            lastVolumeLevel = currentMediaSession.volume.level;
+            // Mute
+            const volume = new chrome.cast.Volume(0, true);
+            const volumeRequest = new chrome.cast.media.VolumeRequest(volume);
+            currentMediaSession.setVolume(volumeRequest, onMediaCommandSuccess, onError);
         }
     });
 }
