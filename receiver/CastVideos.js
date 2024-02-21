@@ -16,10 +16,6 @@ const videoList = [
     // Add more video URLs as needed
 ];
 
-
-
-
-
 document.getElementById('cast-btn').addEventListener('click', () => {
     initializeApiOnly();
 });
@@ -64,6 +60,8 @@ function sessionListener(newSession) {
     session = newSession;
     document.getElementById('cast-btn').style.display = 'block';
     document.getElementById('next').style.display = 'block';
+
+    document.dispatchEvent(new Event('sessionInitialized'));
 }
 
 function onMediaDiscovered(mediaItem) {
@@ -230,4 +228,20 @@ function initializeMuted(remotePlayerController, remotePlayer, mediaSession) {
             currentMediaSession.setVolume(volumeRequest, onMediaCommandSuccess, onError);
         }
     });
+}
+export default function startPlaybackWithURL(videoUrl) {
+    if (!session) {
+        initializeApiOnly();
+
+        document.addEventListener('sessionInitialized', function() {
+            videoList = [videoUrl];
+            currentVideoIndex = 0; // Reset the index to load the new video
+
+            loadMedia(videoList[currentVideoIndex]);
+        }, { once: true });
+    } else {
+        videoList = [videoUrl];
+        currentVideoIndex = 0;
+        loadMedia(videoList[currentVideoIndex]);
+    }
 }
