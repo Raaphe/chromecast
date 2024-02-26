@@ -136,7 +136,9 @@
         </button>
       </div>
 
-      <div class="screen" id="startBtn"></div>
+      <div class="screen" >
+        <button id="startBtn" class="btn btn-dark">start</button>
+      </div>
 
       <div class="row bottom-bar">
         <!-- Slider -->
@@ -279,13 +281,14 @@
       const currentTimeElement = document.getElementById("currentTime");
       const totalTimeElement = document.getElementById("totalTime");
       const defaultContentType = "video/mp4";
-      var mediaUrl = "";
       var coverImage = "";
+      var mediaUrl = "";
 
       window.addEventListener(
         "message",
         (event) => {
-          var mediaUrl = event.data.url.url;
+          mediaUrl = event.data.url.url;
+          localStorage.setItem("mediaUrl", mediaUrl); 
           var coverImage = event.data.cover;
           console.log(mediaUrl, coverImage);
 
@@ -325,11 +328,11 @@
 
       document.getElementById("startBtn").addEventListener("click", () => {
         if (currentSession) {
-          if (localStorage.getItem("currentVideoIndexLS")) {
-            loadMedia(videoList[localStorage.getItem("currentVideoIndexLS")]);
-          } else {
-            loadMedia(videoList[currentVideoIndex]);
-          }
+          console.log("Starting");
+          console.log(currentSession);
+          console.log(videoList)
+          loadMedia(localStorage.getItem("mediaUrl"));
+          
         } else {
           alert("Connectez-vous sur chromecast en premier");
         }
@@ -521,6 +524,9 @@
         const remotePlayer = new cast.framework.RemotePlayer();
         const remotePlayerController =
           new cast.framework.RemotePlayerController(remotePlayer);
+
+          console.log(request)
+
 
         currentSession.loadMedia(
           request,
