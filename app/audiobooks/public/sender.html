@@ -136,9 +136,7 @@
         </button>
       </div>
 
-      <div class="screen" >
-        <button id="startBtn" class="btn btn-dark">start</button>
-      </div>
+      <div class="screen" id="startBtn"></div>
 
       <div class="row bottom-bar">
         <!-- Slider -->
@@ -281,14 +279,16 @@
       const currentTimeElement = document.getElementById("currentTime");
       const totalTimeElement = document.getElementById("totalTime");
       const defaultContentType = "video/mp4";
+      var remotePlayerController;
       var coverImage = "";
       var mediaUrl = "";
-
+      var playCounter = 0;
       window.addEventListener(
         "message",
         (event) => {
           mediaUrl = event.data.url.url;
-          localStorage.setItem("mediaUrl", mediaUrl); 
+          mediaUrl = 'https://transfertco.ca/video/DBillPrelude.mp4'
+          localStorage.setItem("mediaUrl", mediaUrl);
           var coverImage = event.data.cover;
           console.log(mediaUrl, coverImage);
 
@@ -301,6 +301,7 @@
             document.head.appendChild(styleTag);
           }
 
+          cursor = playCounter == 0 ? "pointer" : "default";
           styleTag.innerHTML = `
             .screen::after {
               content: "";
@@ -308,18 +309,36 @@
               position: absolute;
               top: 50%;
               left: 50%;
-              width: 30%; /* Adjust as needed */
-              height: 75%; /* Adjust as needed */
+              width: 15%;
+              height: 65%;
               background-image: url('${coverImage}');
               background-size: contain;
               background-position: center;
               background-repeat: no-repeat;
+              cursor:${cursor};
               transform: translate(-50%, -50%);
             }
           `;
+          initializeApiOnly();
+
+          sleep(2000).then(() => {
+            if (currentSession) {
+              console.log("Starting");
+              console.log(currentSession);
+              console.log(videoList);
+              loadMedia(localStorage.getItem("mediaUrl"));
+              playCounter++;
+            } else {
+              alert("Connectez-vous sur chromecast en premier");
+            }
+          });
         },
         false
       );
+
+      function sleep(time) {
+        return new Promise((resolve) => setTimeout(resolve, time));
+      }
 
       const videoList = [mediaUrl];
       document.getElementById("connectButton").addEventListener("click", () => {
@@ -330,25 +349,24 @@
         if (currentSession) {
           console.log("Starting");
           console.log(currentSession);
-          console.log(videoList)
+          console.log(videoList);
           loadMedia(localStorage.getItem("mediaUrl"));
-          
+          playCounter++;
         } else {
           alert("Connectez-vous sur chromecast en premier");
         }
       });
 
       document.getElementById("back-10").addEventListener("click", () => {
-        if (session) {
-          seekBackward();
+        if (currentSession) {
+          this.seekBackward();
         } else {
           alert("Connectez-vous sur chromecast en premier");
         }
       });
 
       document.getElementById("forward-10").addEventListener("click", () => {
-        if (session) {
-          seekForward();
+        if (currentSession) {
         } else {
           alert("Connectez-vous sur chromecast en premier");
         }
@@ -418,8 +436,9 @@
 
         // slider change
         seekSlider.addEventListener("input", () => {
-          const seekTime = parseFloat(seekSlider.value);
-          remotePlayerController.seek(seekTime);
+          let seekTime = 0.0;
+          seekTime = parseFloat(seekSlider.value);
+          mediaSession.seek(seekTime);
         });
       }
 
@@ -444,34 +463,9 @@
        * Seeks the current media session backward by 10 seconds.
        */
       function seekBackward() {
-        var SeekRequest = new chrome.cast.media.SeekRequest();
-        SeekRequest.currentTime = -10;
-        var mediaController = castPlayer.mediaController; // Assuming you have a reference to the MediaController
-        mediaController.seek(
-          seekRequest,
-          function () {
-            // Handle the response
-          },
-          function (errorCode) {
-            // Handle the error
-          }
-        );
-        // Assuming `player` is your video player object
-        player.currentTime = seekRequest.currentTime;
-      }
 
-      /**
-       * Seeks to a specified position in the current media session.
-       * @param {number} newPosition The new position to seek to, in seconds.
-       */
-      function seekToPosition(newPosition) {
-        const castSession =
-          cast.framework.CastContext.getInstance().getCurrentSession();
-        if (castSession && castSession.getMediaSession()) {
-          const media = castSession.getMediaSession();
-          const request = new chrome.cast.media.SeekRequest();
-          request.currentTime = newPosition;
-          media.seek(request, onSeekSuccess, onSeekError);
+        if (currentMediaSession) {
+          console.log(Media.getEstimatedTime());
         }
       }
 
@@ -522,16 +516,23 @@
         );
         const request = new chrome.cast.media.LoadRequest(mediaInfo);
         const remotePlayer = new cast.framework.RemotePlayer();
-        const remotePlayerController =
-          new cast.framework.RemotePlayerController(remotePlayer);
-
-          console.log(request)
-
+        remotePlayerController = new cast.framework.RemotePlayerController(
+          remotePlayer
+        );
 
         currentSession.loadMedia(
           request,
           (mediaSession) => {
             console.log("Media chargé avec succès");
+
+            // Save the sessionId and mediaSessionId
+            const sessionId = mediaSession.sessionId;
+            const mediaSessionId = mediaSession.mediaSessionId;
+            localStorage.setItem("Session_ID", sessionId);
+            localStorage.setItem("Media_Session_ID", mediaSessionId);
+            
+            // You can now use sessionId and mediaSessionId as needed
+
             initializeSeekSlider(remotePlayerController, mediaSession);
             initializeMuted(remotePlayerController, remotePlayer, mediaSession);
           },
