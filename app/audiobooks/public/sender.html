@@ -287,7 +287,6 @@
         "message",
         (event) => {
           mediaUrl = event.data.url.url;
-          mediaUrl = 'https://transfertco.ca/video/DBillPrelude.mp4'
           localStorage.setItem("mediaUrl", mediaUrl);
           var coverImage = event.data.cover;
           console.log(mediaUrl, coverImage);
@@ -367,6 +366,15 @@
 
       document.getElementById("forward-10").addEventListener("click", () => {
         if (currentSession) {
+          this.seekForward();
+        } else {
+          alert("Connectez-vous sur chromecast en premier");
+        }
+      });
+
+      document.getElementById("back-btn").addEventListener("click", () => {
+        if (currentSession) {
+          currentSession.stop(() => {console.log("Session ended..")}, () => {console.log("Error stopping the session")});
         } else {
           alert("Connectez-vous sur chromecast en premier");
         }
@@ -438,7 +446,11 @@
         seekSlider.addEventListener("input", () => {
           let seekTime = 0.0;
           seekTime = parseFloat(seekSlider.value);
-          mediaSession.seek(seekTime);
+          
+          const seeker = new chrome.cast.media.SeekRequest();
+          seeker.currentTime = seekTime;
+          
+          currentMediaSession.seek(seeker, onSeekSuccess, onSeekError)
         });
       }
 
@@ -446,16 +458,13 @@
        * Seeks the current media session forward by 10 seconds.
        */
       function seekForward() {
-        const castSession =
-          cast.framework.CastContext.getInstance().getCurrentSession();
-        if (castSession) {
-          const media = castSession.getMediaSession();
-          if (media && media.currentTime !== null) {
-            let newPosition = media.currentTime + 10; // Add 10 seconds
-            // Ensure the new position does not exceed the media duration
-            newPosition = Math.min(newPosition, media.media.duration);
-            seekToPosition(newPosition);
-          }
+        if (currentMediaSession) {
+          console.log(currentMediaSession.getEstimatedTime());
+
+          const seeker = new chrome.cast.media.SeekRequest();
+          seeker.currentTime = currentMediaSession.getEstimatedTime() + 10;
+          
+          currentMediaSession.seek(seeker, onSeekSuccess, onSeekError)
         }
       }
 
@@ -465,7 +474,12 @@
       function seekBackward() {
 
         if (currentMediaSession) {
-          console.log(Media.getEstimatedTime());
+          console.log(currentMediaSession.getEstimatedTime());
+
+          const seeker = new chrome.cast.media.SeekRequest();
+          seeker.currentTime = currentMediaSession.getEstimatedTime() - 10;
+          
+          currentMediaSession.seek(seeker, onSeekSuccess, onSeekError)
         }
       }
 
