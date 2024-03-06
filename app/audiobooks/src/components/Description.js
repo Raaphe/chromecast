@@ -147,7 +147,7 @@ const Description = () => {
           </div>
           <br />
           <div className="row">
-            <button type="button" className="btn btn-primary btn-small" onClick={() => navigate("/cast", { state: { book: book }})}>
+            <button type="button" className="btn btn-primary btn-small" onClick={() => navigate("/cast", { state: { book: book } })}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -162,6 +162,17 @@ const Description = () => {
               cast
             </button>
           </div>
+        </div>
+      </div>
+      <div className="text-center">
+        <div class="alert alert-success" role="alert">
+          <h3>Instructions to convert and cast</h3>
+          <hr/>
+          <ol>
+            1. Make sure you are using the chrome browser <br />
+            2. Right click and select cast <br />
+            3. Once your screen is being mirrored, click on the blue cast button
+          </ol>
         </div>
       </div>
     </div>
