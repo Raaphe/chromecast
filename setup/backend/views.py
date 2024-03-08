@@ -16,8 +16,7 @@ def getAudioBook(request, bookId):
       f = open(f'backend/media/{bookId}/url.txt', "r")
       return JsonResponse({'url': f.read()})
    else:
-      return JsonResponse({'url': audiobook_service.generateAudioBook("A quick brown fox jumps over the lazy dog.", bookId)})
-      # return JsonResponse({'url': audiobook_service.generateAudioBook(audiobook_service.getEbook(bookId), bookId)})
+      return JsonResponse({'url': audiobook_service.generateAudioBook(audiobook_service.getEbook(bookId), bookId)})
 
 @csrf_exempt
 @require_GET

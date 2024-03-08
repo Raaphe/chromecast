@@ -37,9 +37,10 @@ def process_text(input_string):
     input_string = input_string.replace('\n', '')
     
     input_string = re.sub(r'[^a-zA-Z0-9\s.,?]', '', input_string)
-    return re.sub(r' +', ' ', input_string).strip()
+    return re.sub(r' +', ' ', input_string).strip()[0: 500]
 
 def generateSpeech(text, filepath, voiceId=voices[0]["voice_id"]):
+    print(len(text))
     # https://elevenlabs.io/
     CHUNK_SIZE = 1024
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voiceId}"
